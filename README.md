@@ -33,3 +33,21 @@ From: bob@example.com
 
 This is a test message
 ```
+
+### Generate an RFC 5322 email
+```
+# Ref https://docs.python.org/3/library/email.examples.html
+import smtplib
+from email.message import EmailMessage
+
+# Create a text/plain message
+msg = EmailMessage()
+msg.set_content("This is my email")
+
+msg['Subject'] = f'Test my email'
+msg['From'] = "bob@example.co.uk"
+msg['To'] = "alice@example.co.uk"
+
+with open("email.exmple", "w") as fp:
+    fp.write(msg.as_string())
+```

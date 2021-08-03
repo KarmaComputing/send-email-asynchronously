@@ -1,5 +1,8 @@
 # Send all emails
 
+With many text emails in a directoy, send them
+all one by one to postfix, then remove them (fire and forget).
+
 # Usage: send-all-emails.sh <path-to-emails>
 
 - Submits all emails found in <path-to-emails> to the
@@ -16,3 +19,15 @@ See
 - http://www.postfix.org/
 - https://github.com/chrisjsimpson/ansible-mailserver
 - https://wildduck.email/
+
+
+## Example RFC valid email
+
+email1.txt
+```
+To: alice@example.com
+Subject: Testing
+From: bob@example.com
+
+This is a test message
+```

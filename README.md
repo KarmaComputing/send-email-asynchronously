@@ -1,7 +1,9 @@
 # Send all emails
 
-With many text emails in a directoy, send them
-all one by one to postfix, then remove them (fire and forget).
+1. You have a directory full of emails (text RFC 5322) and you want to send them all
+2. Use this script to pipe each message to Postfix via `sendmail`.
+3. Once send to `sendmail`, each email is deleted from the folder
+
 
 # Usage: send-all-emails.sh <path-to-emails>
 

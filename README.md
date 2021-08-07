@@ -100,3 +100,31 @@ msg.add_alternative("""\
 with open('outgoing.msg', 'wb') as f:
     f.write(bytes(msg))
 ```
+
+# Watch a directory for new files
+```
+apt install incron
+```
+Add user to allowed list
+```
+vi /etc/incron.allow
+```
+
+Run script when email(s) are added to the directory
+
+```
+incrontab -e
+```
+incrontab entry:
+
+```
+<path-to-email-files> IN_CLOSE_WRITE,loopable=true /bin/bash <path-to-send-all-emails.sh> <path-to-emails-folder>
+
+# e.g:
+/var/mail IN_CLOSE_WRITE,loopable=true /bin/bash /home/<username>/path-to-send-all-emails.sh /var/mail
+```
+
+## Errors
+
+##### incrond[27693]: cannot exec process: No such file or directory
+[Inside you incrontabs, you must leave *only* 1 space between the <path> <mask> <cmd>.](http://sudoall.com/incrond-cannot-exec-process-no-such-file-or-directory/)

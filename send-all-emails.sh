@@ -12,6 +12,11 @@ set -euxo pipefail
 # Note: Email files must be text RFC emails (e.g. RFC 5322)
 # Note: Requires a running Postfix server
 
+# Begin lock
+ME=`basename "$0"`;
+LCK="/tmp/${ME}.LCK";
+exec 8>$LCK;
+
 PATH_TO_EMAILS=$1
 
 EMAILS="$PATH_TO_EMAILS/*"

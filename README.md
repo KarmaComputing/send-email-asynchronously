@@ -5,7 +5,11 @@
 3. Once send to `sendmail`, each email is deleted from the folder
 
 
-# Usage: send-all-emails.sh <path-to-emails>
+- push-emails.sh - (app) pushes emails (text files) to server
+- send-all-emails.sh (server) submits emails to postfix
+
+
+# Usage: send-all-emails.sh <path-to-emails> (see incrontab to watch directory)
 
 - Submits all emails found in <path-to-emails> to the
 - Postfix  sendmail command which causes mails to get

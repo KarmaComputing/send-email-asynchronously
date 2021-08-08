@@ -8,6 +8,51 @@
 - push-emails.sh - (app) pushes emails (text files) to server
 - send-all-emails.sh (server) submits emails to postfix
 
+# Why is this useful?
+
+Allows you to easily send email asynchronously or send email in background.
+Especially web applications will block and wait until the email is sent before loading the page, 
+which is slow. Why is it slow? Because your application is sending the email in the same process,
+you may get away with using `threads` , however depending on your web server these threads may die
+with the request and is not reliable for this reason.
+
+### Why does sending an email block my application from loading anyway?
+
+tldr; Because sending email during script execution is usually synchronous by default 
+rather than asynchronous.
+
+e.g. What happens when your application sends an email:
+
+The main [thread](https://en.wikipedia.org/wiki/Thread_(computing)) of your application:
+
+- Opens a TCP connection to the email server (which could be in another country)
+- Logs into the email server (SMTP auth)
+- Submits the email to the email server over the TCP connection (SMTP submission)
+- Waits for the SMTP submission to complete
+- Finally continues loading your app.
+
+:) How make faster?
+
+Stop sending the email during the script synchronously. The code in this
+repo is *one* way to achieve this.
+
+It works like this:
+
+1. In your application, instead of sending them right away, simply write them to a single folder on your server (is *very* fastand easy to write to a file) see [examples](https://github.com/chrisjsimpson/send-all-emails/tree/main/email-client-example-code). This is important as your application is no longer blocking whilst sending an email. So how are emails sent?
+2. In the background, watch for files as they get created in the folder with emails you created using [(we use inotify to achieve this)](https://en.wikipedia.org/wiki/Inotify)
+3. Run a command to `copy` these email to your email server using [incrontab](https://linux.die.net/man/5/incrontab)
+Then, in the background, copy (e.g. using `scp`) the emails to your email server.
+4. Simerly, the email server is watching the directory for email files to be written to, and when new email files are placed into the email folder, the `send-all-emails` script processes and sends the emails (e.g. using postfix)
+
+e.g. 
+
+- [django (python)](https://code.djangoproject.com/ticket/28189)
+- [flask (python)](https://stackoverflow.com/questions/32197564/how-to-send-emails-in-background-in-python-webapplication-with-flask-framework), [flask 'What happens with this code for me is that sometimes I receive an email and sometimes don't'](https://stackoverflow.com/questions/11047307/run-flask-mail-asynchronously/18407455), [flask mega tutorial-](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-x-email-support)
+- [laravel (php)- cron/queue](https://laravel.com/docs/8.x/queues#running-the-queue-worker)
+
+Often Celery/Redis/task-queues are [written about](https://www.peterspython.com/en/blog/celery-redis-and-the-in-famous-email-task-example) as a solution for this, but there are other ways since setting up and configuring these systems is outside of
+typical day to day experience.
+
 
 # Usage: send-all-emails.sh <path-to-emails> (see incrontab to watch directory)
 
@@ -19,7 +64,7 @@
 - Note: sendmail submits to Postfix's postdrop
 - Note: Requires a running Postfix server
 
-Need an email server?
+#### Need an email server?
 
 See 
 - http://www.postfix.org/
@@ -37,6 +82,8 @@ From: bob@example.com
 
 This is a test message
 ```
+
+## Emails are just plain text
 
 ### Generate an RFC 5322 email
 ```

@@ -105,7 +105,7 @@ with open('outgoing.msg', 'wb') as f:
     f.write(bytes(msg))
 ```
 
-# Watch a directory for new files
+# (Email Server) Watch directory for new files
 ```
 apt install incron
 ```
@@ -123,6 +123,39 @@ incrontab entry:
 
 ```
 <path-to-email-files> IN_CLOSE_WRITE,loopable=true /bin/bash <path-to-send-all-emails.sh> <path-to-emails-folder>
+
+# e.g:
+/var/mail IN_CLOSE_WRITE,loopable=true /bin/bash /home/<username>/path-to-send-all-emails.sh /var/mail
+```
+
+# (App server) Watch directory for email files & push them to email server asynchronously
+```
+apt install incron
+apt-get install keychain
+```
+
+Setup keychain (to allow incrontab) to scp to email server
+
+```
+# Add to end of ~/.bashrc
+/usr/bin/keychain "$HOME/.ssh/id_rsa"
+source "$HOME/.keychain/${HOSTNAME}-sh"
+```
+
+Add user to allowed list (e.g. alice/bob)
+```
+vi /etc/incron.allow
+```
+
+Run script when email(s) are added to the directory
+
+```
+incrontab -e
+```
+incrontab entry:
+
+```
+<path-to-email-files> IN_CLOSE_WRITE,loopable=true /bin/bash <push-emails.sh> <path-to-emails-folder>
 
 # e.g:
 /var/mail IN_CLOSE_WRITE,loopable=true /bin/bash /home/<username>/path-to-send-all-emails.sh /var/mail

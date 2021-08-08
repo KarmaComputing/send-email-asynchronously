@@ -18,8 +18,9 @@ with the request and is not reliable for this reason.
 
 ### Why does sending an email block my application from loading anyway?
 
-tldr; Because sending email during script execution is usually synchronous by default 
-rather than asynchronous.
+tldr 1: Because your code has to connect to another server, which takes ages, wait, and then carry on
+tldr 2: Because sending email during script execution is usually synchronous by default 
+rather than asynchronous, you need to do long-running tasks asynchronously
 
 e.g. What happens when your application sends an email:
 
@@ -31,27 +32,32 @@ The main [thread](https://en.wikipedia.org/wiki/Thread_(computing)) of your appl
 - Waits for the SMTP submission to complete
 - Finally continues loading your app.
 
-:) How make faster?
+How to make that faster?
 
 Stop sending the email during the script synchronously. The code in this
 repo is *one* way to achieve this.
 
+> "We can solve any problem by introducing an extra level of indirection." - [David Wheeler (1927 – 13 December 2004)](https://en.wikipedia.org/wiki/David_Wheeler_(computer_scientist))
+
 It works like this:
 
-1. In your application, instead of sending them right away, simply write them to a single folder on your server (is *very* fastand easy to write to a file) see [examples](https://github.com/chrisjsimpson/send-all-emails/tree/main/email-client-example-code). This is important as your application is no longer blocking whilst sending an email. So how are emails sent?
+1. In your application, instead of sending your email(s) right away, simply write them to a single folder on your server (is *very* fastand easy to write to a file) see [examples](https://github.com/chrisjsimpson/send-all-emails/tree/main/email-client-example-code). This is important as your application is no longer blocking whilst sending an email. So when *do* emails get sent? - They're copyied to the email server in the background, [`inotify`](https://en.wikipedia.org/wiki/Inotify) notices a new email is in the directory, and the email file is pushed into [postfix](https://en.wikipedia.org/wiki/Postfix_(software)) for sending. 
 2. In the background, watch for files as they get created in the folder with emails you created using [(we use inotify to achieve this)](https://en.wikipedia.org/wiki/Inotify)
 3. Run a command to `copy` these email to your email server using [incrontab](https://linux.die.net/man/5/incrontab)
 Then, in the background, copy (e.g. using `scp`) the emails to your email server.
 4. Simerly, the email server is watching the directory for email files to be written to, and when new email files are placed into the email folder, the `send-all-emails` script processes and sends the emails (e.g. using postfix)
 
-e.g. 
+Sending email asynchronously is a common question/problem when coding web applications
+and (maybe?) isn't well understood:
 
+- [socketlabs](https://www.socketlabs.com/blog/web-api-send-email-async/)
 - [django (python)](https://code.djangoproject.com/ticket/28189)
 - [flask (python)](https://stackoverflow.com/questions/32197564/how-to-send-emails-in-background-in-python-webapplication-with-flask-framework), [flask 'What happens with this code for me is that sometimes I receive an email and sometimes don't'](https://stackoverflow.com/questions/11047307/run-flask-mail-asynchronously/18407455), [flask mega tutorial-](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-x-email-support)
 - [laravel (php)- cron/queue](https://laravel.com/docs/8.x/queues#running-the-queue-worker)
 
 Often Celery/Redis/task-queues are [written about](https://www.peterspython.com/en/blog/celery-redis-and-the-in-famous-email-task-example) as a solution for this, but there are other ways since setting up and configuring these systems is outside of
-typical day to day experience.
+typical day to day experience, hence there are many SaaS services to outsource this complexity, but understanding how things
+work is useful/fun - and profitable skills to learn. 
 
 
 # Usage: send-all-emails.sh <path-to-emails> (see incrontab to watch directory)
